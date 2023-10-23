@@ -2,14 +2,17 @@ package main
 
 import (
 	"dego/controller"
-	"dego/router"
+	"github.com/gin-gonic/gin"
 	"log"
 )
 
 func main() {
-	router.Router.POST("/create", controller.Create)
-	err := router.Router.Run("localhost:8080")
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.Default()
+	router.POST("/create", controller.Create)
+	err := router.Run("localhost:8080")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
 }

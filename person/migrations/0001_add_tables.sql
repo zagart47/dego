@@ -8,10 +8,4 @@ CREATE TABLE persons
     age        INT,
     gender     VARCHAR(255)
 );
-CREATE TABLE countries
-(
-    id          BIGSERIAL REFERENCES persons (id) ON DELETE CASCADE,
-    country_id  VARCHAR(255),
-    probability FLOAT
-);
 SELECT 'down SQL query';
