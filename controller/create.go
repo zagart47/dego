@@ -22,6 +22,7 @@ func Create(c *gin.Context) {
 	links := []string{
 		"https://api.agify.io/?name=",
 		"https://api.genderize.io/?name=",
+		"https://api.nationalize.io/?name=",
 	}
 
 	for _, v := range links {
