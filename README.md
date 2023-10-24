@@ -25,13 +25,121 @@ Have:
 Got:
 ```
 {
-    "name":"Vasya",
-    "surname":"",
-    "patronymic":"",
-    "age":49,
-    "gender":"male",
+    "id": "4",
+        "name": "Vasya",
+        "surname": "Petrov",
+        "patronymic": "",
+        "age": 50,
+        "gender": "male",
+        "country": [
+            {
+                "person_id": 0,
+                "country_id": "UA",
+                "probability": 0.471
+            },
+            {
+                "person_id": 0,
+                "country_id": "RU",
+                "probability": 0.202
+            },
+            {
+                "person_id": 0,
+                "country_id": "BY",
+                "probability": 0.083
+            },
+            {
+                "person_id": 0,
+                "country_id": "BG",
+                "probability": 0.04
+            },
+            {
+                "person_id": 0,
+                "country_id": "KZ",
+                "probability": 0.029
+            }
+        ]
 }
 ```
+
+```GET: /all``` - получает всех добавленных людей из БД
+
+Got:
+```
+{
+    {
+            "id": "3",
+            "name": "Michal",
+            "surname": "Michalov",
+            "patronymic": "",
+            "age": 48,
+            "gender": "male",
+            "country": [
+                {
+                    "person_id": 3,
+                    "country_id": "CZ",
+                    "probability": 0.372
+                },
+                {
+                    "person_id": 3,
+                    "country_id": "IE",
+                    "probability": 0.015
+                },
+                {
+                    "person_id": 3,
+                    "country_id": "IL",
+                    "probability": 0.153
+                },
+                {
+                    "person_id": 3,
+                    "country_id": "PL",
+                    "probability": 0.079
+                },
+                {
+                    "person_id": 3,
+                    "country_id": "SK",
+                    "probability": 0.305
+                }
+            ]
+        },
+        {
+            "id": "4",
+            "name": "Vasya",
+            "surname": "Petrov",
+            "patronymic": "",
+            "age": 50,
+            "gender": "male",
+            "country": [
+                {
+                    "person_id": 4,
+                    "country_id": "BG",
+                    "probability": 0.04
+                },
+                {
+                    "person_id": 4,
+                    "country_id": "BY",
+                    "probability": 0.083
+                },
+                {
+                    "person_id": 4,
+                    "country_id": "KZ",
+                    "probability": 0.029
+                },
+                {
+                    "person_id": 4,
+                    "country_id": "RU",
+                    "probability": 0.202
+                },
+                {
+                    "person_id": 4,
+                    "country_id": "UA",
+                    "probability": 0.471
+                }
+            ]
+        }
+    ]
+}
+```
+
 
 ### TODO {
 
