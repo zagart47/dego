@@ -87,6 +87,21 @@ func (r *repository) FindOne(ctx context.Context, id string) (Person, error) {
 	if err != nil {
 		return Person{}, err
 	}
+	countryQuery := `
+		SELECT person_id, country_id, probability FROM public.countries WHERE person_id = $1
+		`
+	countryRows, err := r.client.Query(ctx, countryQuery, id)
+	if err != nil {
+		return Person{}, err
+	}
+	for countryRows.Next() {
+		var c Country
+		err = countryRows.Scan(&c.PersonId, &c.CountryId, &c.Probability)
+		if err != nil {
+			return Person{}, err
+		}
+		p.Country = append(p.Country, c)
+	}
 
 	return p, nil
 }
