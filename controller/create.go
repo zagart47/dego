@@ -24,26 +24,34 @@ func Create(c *gin.Context) {
 		"https://api.genderize.io/?name=",
 		"https://api.nationalize.io/?name=",
 	}
-
+	resp := &http.Response{}
+	ch := make(chan *http.Response, len(links))
 	for _, v := range links {
-		link := fmt.Sprintf("%s%s", v, p.Name)
-		resp, err := http.Get(link)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-			resp.Body.Close()
-		}
-		err = json.NewDecoder(resp.Body).Decode(&p)
+		v := v
+		go func() chan *http.Response {
+			link := fmt.Sprintf("%s%s", v, p.Name)
+			resp, err = http.Get(link)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return nil
+			}
+			ch <- resp
+			return ch
+		}()
+
+	}
+	for range links {
+		r := <-ch
+		err = json.NewDecoder(r.Body).Decode(&p)
 		if err != nil {
 			c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
-			return
-			resp.Body.Close()
 		}
-
+		r.Body.Close()
 	}
 	id, err := repo.Create(context.TODO(), p)
 	if err != nil {
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"user added with id": id})
+	p.ID = id
+	c.JSON(http.StatusOK, gin.H{"user added": p})
 }
