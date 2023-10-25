@@ -38,40 +38,27 @@ func (r *repository) Create(ctx context.Context, person Person) (string, error) 
 	return person.ID, nil
 }
 
-func (r *repository) FindAll(ctx context.Context) (p []Person, err error) {
-	personQuery := `
-		SELECT id, name, surname, patronymic, age, gender FROM public.persons
+func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
+	q := `
+		SELECT id, name, surname, patronymic, age, gender, person_id, country_id, probability FROM public.persons
+		JOIN public.countries c on persons.id = c.person_id
 		`
-	rows, err := r.client.Query(ctx, personQuery)
+	rows, err := r.client.Query(ctx, q)
 	if err != nil {
 		return nil, err
 	}
 	persons := make([]Person, 0)
-	countryQuery := `
-		SELECT person_id, country_id, probability FROM public.countries WHERE person_id = $1
-		`
 	for rows.Next() {
 		var p Person
-		err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender)
-		if err != nil {
-			return nil, err
-		}
-		if err = rows.Err(); err != nil {
-			return nil, err
-		}
-		countryRows, err := r.client.Query(ctx, countryQuery, p.ID)
-		if err != nil {
-			return nil, err
-		}
-		for countryRows.Next() {
-			var c Country
-			err = countryRows.Scan(&c.PersonId, &c.CountryId, &c.Probability)
-			if err != nil {
-				return nil, err
+		var c Country
+		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.PersonId, &c.CountryId, &c.Probability); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
 			}
-			p.Country = append(p.Country, c)
+			return nil, err
 		}
-
+		p.Country = append(p.Country, c)
 		persons = append(persons, p)
 	}
 
@@ -80,25 +67,26 @@ func (r *repository) FindAll(ctx context.Context) (p []Person, err error) {
 
 func (r *repository) FindOne(ctx context.Context, id string) (Person, error) {
 	q := `
-		SELECT id, name, surname, patronymic, age, gender FROM public.persons WHERE id = $1
+		SELECT id, name, surname, patronymic, age, gender, person_id, country_id, probability FROM public.persons
+		JOIN public.countries c on persons.id = c.person_id
+		WHERE public.persons.id = $1
 		`
+
+	rows, err := r.client.Query(ctx, q, id)
+	if err != nil {
+		return Person{}, err
+	}
 	var p Person
-	err := r.client.QueryRow(ctx, q, id).Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender)
-	if err != nil {
-		return Person{}, err
-	}
-	countryQuery := `
-		SELECT person_id, country_id, probability FROM public.countries WHERE person_id = $1
-		`
-	countryRows, err := r.client.Query(ctx, countryQuery, id)
-	if err != nil {
-		return Person{}, err
-	}
-	for countryRows.Next() {
+	for rows.Next() {
 		var c Country
-		err = countryRows.Scan(&c.PersonId, &c.CountryId, &c.Probability)
-		if err != nil {
-			return Person{}, err
+		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.PersonId, &c.CountryId, &c.Probability); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
+				return Person{}, err
+			} else {
+				return Person{}, err
+			}
 		}
 		p.Country = append(p.Country, c)
 	}
