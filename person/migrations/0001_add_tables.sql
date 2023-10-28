@@ -1,12 +1,13 @@
 SELECT 'up SQL query';
 CREATE TABLE IF NOT EXISTS persons
 (
-    id         BIGSERIAL PRIMARY KEY ,
+    id         BIGSERIAL PRIMARY KEY,
     name       VARCHAR(255) NOT NULL,
     surname    VARCHAR(255),
     patronymic VARCHAR(255),
     age        SMALLINT,
-    gender     VARCHAR(255)
+    gender     VARCHAR(255),
+    is_del     BOOLEAN
 
 );
 

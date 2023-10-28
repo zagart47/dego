@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func GetOne(c *gin.Context) {
+func Update(c *gin.Context) {
 	client, err := postgresql.NewClient(context.TODO(), 3)
 	repo := person.NewRepository(client)
 
@@ -18,12 +18,23 @@ func GetOne(c *gin.Context) {
 	if err != nil {
 		log.Fatal("id input error")
 	}
-
-	person, err := repo.FindOne(context.TODO(), id)
+	var p person.Person
+	p, err = repo.FindOne(context.TODO(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"person not found with id": id})
+		return
 	}
-	if person.ID != 0 {
-		c.JSON(http.StatusOK, gin.H{"one person": person})
+
+	if err := c.ShouldBindJSON(&p); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.Abort()
 	}
+
+	err = repo.Update(context.TODO(), p)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"user not added": p})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user updated": p})
 }
