@@ -13,12 +13,14 @@ docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD={PASSWORD} -e POSTG
 DBHOST=postgres://{USERNAME}:{PASSWORD}@{DBHOST}:5432/postgres
 ```
 REST API методы:
+
 ```POST: /create``` - создает пользователя с именем Vasya и заполняет пустые поля данными из публичных API
 
 Have:
 ```
 {
     "name":"Vasya",
+    "surname": "Petrov"
 }
 ```
 
@@ -33,27 +35,22 @@ Got:
         "gender": "male",
         "country": [
             {
-                "person_id": 0,
                 "country_id": "UA",
                 "probability": 0.471
             },
             {
-                "person_id": 0,
                 "country_id": "RU",
                 "probability": 0.202
             },
             {
-                "person_id": 0,
                 "country_id": "BY",
                 "probability": 0.083
             },
             {
-                "person_id": 0,
                 "country_id": "BG",
                 "probability": 0.04
             },
             {
-                "person_id": 0,
                 "country_id": "KZ",
                 "probability": 0.029
             }
@@ -75,27 +72,22 @@ Got:
             "gender": "male",
             "country": [
                 {
-                    "person_id": 3,
                     "country_id": "CZ",
                     "probability": 0.372
                 },
                 {
-                    "person_id": 3,
                     "country_id": "IE",
                     "probability": 0.015
                 },
                 {
-                    "person_id": 3,
                     "country_id": "IL",
                     "probability": 0.153
                 },
                 {
-                    "person_id": 3,
                     "country_id": "PL",
                     "probability": 0.079
                 },
                 {
-                    "person_id": 3,
                     "country_id": "SK",
                     "probability": 0.305
                 }
@@ -110,27 +102,22 @@ Got:
             "gender": "male",
             "country": [
                 {
-                    "person_id": 4,
                     "country_id": "BG",
                     "probability": 0.04
                 },
                 {
-                    "person_id": 4,
                     "country_id": "BY",
                     "probability": 0.083
                 },
                 {
-                    "person_id": 4,
                     "country_id": "KZ",
                     "probability": 0.029
                 },
                 {
-                    "person_id": 4,
                     "country_id": "RU",
                     "probability": 0.202
                 },
                 {
-                    "person_id": 4,
                     "country_id": "UA",
                     "probability": 0.471
                 }
@@ -141,16 +128,11 @@ Got:
 ```
 
 
-### TODO {
 
-```POST: /deleteById``` - удаляет пользователя с id=1 из БД
-```
-{
-    "id": 1
-}
-```
 
-```POST: /editById/1``` - вносит изменения в БД с id=1
+```GET: /delete/1``` - удаляет пользователя с id=1 из БД
+
+```POST: /update/1``` - вносит изменения в БД с id=1
 Have:
 ```
 {
@@ -158,7 +140,7 @@ Have:
     "surname":"",
     "patronymic":"",
     "age":49,
-    "gender":"male",
+    "gender":"male"
 }
 ```
 
@@ -169,7 +151,7 @@ Want to change:
     "surname":"Petrov",
     "patronymic":"Ivanovich",
     "age":56,
-    "gender":"",
+    "gender":""
 }
 ```
 
@@ -180,10 +162,11 @@ Got:
     "surname":"Petrov",
     "patronymic":"Ivanovich",
     "age":56,
-    "gender":"male",
+    "gender":"male"
 }
 ```
 
+### TODO {
 ```POST: /filter/name/Vasya``` - получает данные из бд с фильтром
 ```
 {
