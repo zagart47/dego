@@ -12,7 +12,7 @@ type repository struct {
 	client postgresql.Client
 }
 
-func (r *repository) Create(ctx context.Context, person Person) (string, error) {
+func (r *repository) Create(ctx context.Context, person Person) (int64, error) {
 	personQuery := `
 		INSERT INTO public.persons (name, surname, patronymic, age, gender)
 		VALUES ($1, $2, $3, $4, $5)
@@ -27,7 +27,7 @@ func (r *repository) Create(ctx context.Context, person Person) (string, error) 
 		countryQuery := `
 			INSERT INTO countries (person_id, country_id, probability)
 			VALUES ($1, $2, $3)`
-		if err := r.client.QueryRow(ctx, countryQuery, person.ID, country.CountryId, country.Probability).Scan(&person.ID); err != nil {
+		if err := r.client.QueryRow(ctx, countryQuery, person.ID, country.CountryId, country.Probability).Scan(); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) {
 				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
@@ -40,7 +40,7 @@ func (r *repository) Create(ctx context.Context, person Person) (string, error) 
 
 func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
 	q := `
-		SELECT id, name, surname, patronymic, age, gender, person_id, country_id, probability FROM public.persons
+		SELECT id, name, surname, patronymic, age, gender, country_id, probability FROM public.persons
 		JOIN public.countries c on persons.id = c.person_id
 		`
 	rows, err := r.client.Query(ctx, q)
@@ -51,7 +51,7 @@ func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
 	for rows.Next() {
 		var p Person
 		var c Country
-		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.PersonId, &c.CountryId, &c.Probability); err != nil {
+		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.CountryId, &c.Probability); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) {
 				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
@@ -65,9 +65,9 @@ func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
 	return persons, nil
 }
 
-func (r *repository) FindOne(ctx context.Context, id string) (Person, error) {
+func (r *repository) FindOne(ctx context.Context, id int64) (Person, error) {
 	q := `
-		SELECT id, name, surname, patronymic, age, gender, person_id, country_id, probability FROM public.persons
+		SELECT id, name, surname, patronymic, age, gender, country_id, probability FROM public.persons
 		JOIN public.countries c on persons.id = c.person_id
 		WHERE public.persons.id = $1
 		`
@@ -79,7 +79,7 @@ func (r *repository) FindOne(ctx context.Context, id string) (Person, error) {
 	var p Person
 	for rows.Next() {
 		var c Country
-		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.PersonId, &c.CountryId, &c.Probability); err != nil {
+		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.CountryId, &c.Probability); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) {
 				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
@@ -99,7 +99,7 @@ func (r *repository) Update(ctx context.Context, person Person) error {
 	panic("implement me")
 }
 
-func (r *repository) Delete(ctx context.Context, id string) error {
+func (r *repository) Delete(ctx context.Context, id int64) error {
 	//TODO implement me
 	panic("implement me")
 }

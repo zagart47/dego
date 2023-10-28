@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"sync"
 )
 
 func Create(c *gin.Context) {
@@ -40,18 +41,22 @@ func Create(c *gin.Context) {
 		}()
 
 	}
+	mu := sync.Mutex{}
 	for range links {
+		mu.Lock()
 		r := <-ch
 		err = json.NewDecoder(r.Body).Decode(&p)
 		if err != nil {
 			c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
 		}
 		r.Body.Close()
+		mu.Unlock()
 	}
 	id, err := repo.Create(context.TODO(), p)
 	if err != nil {
 		return
 	}
 	p.ID = id
+
 	c.JSON(http.StatusOK, gin.H{"user added": p})
 }
