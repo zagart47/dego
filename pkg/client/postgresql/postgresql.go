@@ -2,12 +2,12 @@ package postgresql
 
 import (
 	"context"
+	"dego/config"
 	"dego/utils"
+	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
-	"os"
 	"time"
 )
 
@@ -19,9 +19,9 @@ type Client interface {
 }
 
 func NewClient(ctx context.Context, attempts int) (pool *pgxpool.Pool, err error) {
-	_ = godotenv.Load("config/.env")
-	dsn := os.Getenv("DBHOST")
-	err = utils.DoWithTries(func() error {
+	server := config.NewConfig()
+	dsn := fmt.Sprintf("%s://%s:%s@%s:%s/%s", server.DB, server.DBUser, server.DBPwd, server.DBHost, server.DBPort, server.DBName)
+	err = utils.ConnectWithTries(func() error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 

@@ -20,7 +20,7 @@ func (r *repository) Create(ctx context.Context, person Person) (int64, error) {
 	if err := r.client.QueryRow(ctx, personQuery, person.Name, person.Surname, person.Patronymic, person.Age, person.Gender, false).Scan(&person.ID); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
+			fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
 		}
 	}
 	for _, country := range person.Country {
@@ -30,7 +30,7 @@ func (r *repository) Create(ctx context.Context, person Person) (int64, error) {
 		if err := r.client.QueryRow(ctx, countryQuery, person.ID, country.CountryId, country.Probability).Scan(); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) {
-				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
+				fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
 			}
 		}
 	}
@@ -39,29 +39,50 @@ func (r *repository) Create(ctx context.Context, person Person) (int64, error) {
 }
 
 func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
-	q := `
-		SELECT id, name, surname, patronymic, age, gender, country_id, probability FROM public.persons
-		JOIN public.countries c on persons.id = c.person_id
+	pq := `
+		SELECT id, name, surname, patronymic, age, gender, is_del FROM public.persons		
 		`
-	rows, err := r.client.Query(ctx, q)
+	rows, err := r.client.Query(ctx, pq)
 	if err != nil {
 		return nil, err
 	}
 	persons := make([]Person, 0)
 	for rows.Next() {
+		var isDel bool
 		var p Person
-		var c Country
-		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.CountryId, &c.Probability); err != nil {
+		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &isDel); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) {
-				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
+				fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
 			}
 			return nil, err
 		}
-		p.Country = append(p.Country, c)
+		if isDel {
+			continue
+		}
+		cq := `
+		SELECT country_id, probability FROM public.persons
+		JOIN public.countries c on persons.id = c.person_id
+		WHERE c.person_id = $1
+		`
+		countryRows, err := r.client.Query(ctx, cq, p.ID)
+		if err != nil {
+			return nil, err
+		}
+		var c Country
+		for countryRows.Next() {
+			if err = countryRows.Scan(&c.CountryId, &c.Probability); err != nil {
+				var pgErr *pgconn.PgError
+				if errors.As(err, &pgErr) {
+					fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
+				}
+				return nil, err
+			}
+
+			p.Country = append(p.Country, c)
+		}
 		persons = append(persons, p)
 	}
-
 	return persons, nil
 }
 
@@ -83,7 +104,7 @@ func (r *repository) FindOne(ctx context.Context, id int64) (Person, error) {
 		if err = rows.Scan(&p.ID, &p.Name, &p.Surname, &p.Patronymic, &p.Age, &p.Gender, &c.CountryId, &c.Probability, &isDel); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) {
-				fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
+				fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
 				return Person{}, err
 			} else {
 				return Person{}, err
@@ -105,7 +126,7 @@ func (r *repository) Update(ctx context.Context, person Person) error {
 	if err := r.client.QueryRow(ctx, query, person.ID, person.Name, person.Surname, person.Patronymic, person.Age, person.Gender).Scan(); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
+			fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
 			return err
 		}
 	}
@@ -119,7 +140,7 @@ func (r *repository) Delete(ctx context.Context, id int64) error {
 	if err := r.client.QueryRow(ctx, query, true, id).Scan(); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			fmt.Println(fmt.Sprintf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where))
+			fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
 			return err
 		}
 	}

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -50,6 +51,9 @@ func Enrich(c *gin.Context, p *person.Person) error {
 
 func Create(c *gin.Context) {
 	client, err := postgresql.NewClient(context.TODO(), 3)
+	if err != nil {
+		log.Fatal(err)
+	}
 	repo := person.NewRepository(client)
 
 	var p person.Person

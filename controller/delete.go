@@ -12,6 +12,9 @@ import (
 
 func Delete(c *gin.Context) {
 	client, err := postgresql.NewClient(context.TODO(), 3)
+	if err != nil {
+		log.Fatal(err)
+	}
 	repo := person.NewRepository(client)
 
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
