@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"dego/config"
 	"dego/person"
 	"dego/pkg/client/postgresql"
 	"encoding/json"
@@ -14,11 +15,7 @@ import (
 
 func Enrich(c *gin.Context, p *person.Person) error {
 	var err error
-	links := []string{
-		"https://api.agify.io/?name=",
-		"https://api.genderize.io/?name=",
-		"https://api.nationalize.io/?name=",
-	}
+	links := config.NewLinks()
 	resp := &http.Response{}
 	ch := make(chan *http.Response, len(links))
 	for _, v := range links {
@@ -43,7 +40,10 @@ func Enrich(c *gin.Context, p *person.Person) error {
 		if err != nil {
 			c.JSON(http.StatusNoContent, gin.H{"error": err.Error()})
 		}
-		r.Body.Close()
+		err = r.Body.Close()
+		if err != nil {
+			return err
+		}
 		mu.Unlock()
 	}
 	return nil

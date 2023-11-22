@@ -34,3 +34,11 @@ func NewConfig() ServerConfig {
 	}
 	return serverConfig
 }
+
+func NewLinks() []string {
+	return []string{
+		os.Getenv("AGIFYLINK"),
+		os.Getenv("GENDERIZELINK"),
+		os.Getenv("NATINALIZELINK"),
+	}
+}
