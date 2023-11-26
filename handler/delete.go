@@ -1,4 +1,4 @@
-package controller
+package handler
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 func Delete(c *gin.Context) {
-	client, err := postgresql.NewClient(context.TODO(), 3)
+	client, err := postgresql.New(context.TODO(), 3)
 	if err != nil {
 		log.Fatal(err)
 	}

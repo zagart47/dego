@@ -12,22 +12,22 @@ type repository struct {
 	client postgresql.Client
 }
 
-func (r *repository) Create(ctx context.Context, person Person) (int64, error) {
+func (r *repository) Create(ctx context.Context, p Person) (int64, error) {
 	personQuery := `
 		INSERT INTO public.persons (name, surname, patronymic, age, gender, is_del)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING (id)`
-	if err := r.client.QueryRow(ctx, personQuery, person.Name, person.Surname, person.Patronymic, person.Age, person.Gender, false).Scan(&person.ID); err != nil {
+	if err := r.client.QueryRow(ctx, personQuery, p.Name, p.Surname, p.Patronymic, p.Age, p.Gender, false).Scan(&p.ID); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
 		}
 	}
-	for _, country := range person.Country {
+	for _, country := range p.Country {
 		countryQuery := `
 			INSERT INTO countries (person_id, country_id, probability)
 			VALUES ($1, $2, $3)`
-		if err := r.client.QueryRow(ctx, countryQuery, person.ID, country.CountryId, country.Probability).Scan(); err != nil {
+		if err := r.client.QueryRow(ctx, countryQuery, p.ID, country.CountryId, country.Probability).Scan(); err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) {
 				fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)
@@ -35,10 +35,10 @@ func (r *repository) Create(ctx context.Context, person Person) (int64, error) {
 		}
 	}
 
-	return person.ID, nil
+	return p.ID, nil
 }
 
-func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
+func (r *repository) All(ctx context.Context) ([]Person, error) {
 	pq := `
 		SELECT id, name, surname, patronymic, age, gender, is_del FROM public.persons		
 		`
@@ -46,7 +46,7 @@ func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
 	if err != nil {
 		return nil, err
 	}
-	persons := make([]Person, 0)
+	var persons = make([]Person, 0)
 	for rows.Next() {
 		var isDel bool
 		var p Person
@@ -86,7 +86,7 @@ func (r *repository) FindAll(ctx context.Context) ([]Person, error) {
 	return persons, nil
 }
 
-func (r *repository) FindOne(ctx context.Context, id int64) (Person, error) {
+func (r *repository) One(ctx context.Context, id int64) (Person, error) {
 	q := `
 		SELECT id, name, surname, patronymic, age, gender, country_id, probability, is_del FROM public.persons
 		JOIN public.countries c on persons.id = c.person_id
@@ -119,11 +119,11 @@ func (r *repository) FindOne(ctx context.Context, id int64) (Person, error) {
 	return p, nil
 }
 
-func (r *repository) Update(ctx context.Context, person Person) error {
+func (r *repository) Update(ctx context.Context, p Person) error {
 	query := `
 		UPDATE public.persons SET name = $2, surname = $3, patronymic = $4, age = $5, gender = $6 WHERE id = $1
 		`
-	if err := r.client.QueryRow(ctx, query, person.ID, person.Name, person.Surname, person.Patronymic, person.Age, person.Gender).Scan(); err != nil {
+	if err := r.client.QueryRow(ctx, query, p.ID, p.Name, p.Surname, p.Patronymic, p.Age, p.Gender).Scan(); err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			fmt.Printf("SQL Error: %s, Detail: %s, Where: %s", pgErr.Message, pgErr.Detail, pgErr.Where)

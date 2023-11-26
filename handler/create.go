@@ -1,4 +1,4 @@
-package controller
+package handler
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-func Enrich(c *gin.Context, p *person.Person) error {
+func enrich(c *gin.Context, p *person.Person) error {
 	var err error
 	links := config.NewLinks()
 	resp := &http.Response{}
@@ -50,7 +50,7 @@ func Enrich(c *gin.Context, p *person.Person) error {
 }
 
 func Create(c *gin.Context) {
-	client, err := postgresql.NewClient(context.TODO(), 3)
+	client, err := postgresql.New(context.TODO(), 3)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		c.Abort()
 	}
-	if err := Enrich(c, &p); err != nil {
+	if err := enrich(c, &p); err != nil {
 		c.JSON(404, gin.H{"user not added": p})
 	}
 

@@ -3,7 +3,7 @@ package postgresql
 import (
 	"context"
 	"dego/config"
-	"dego/utils"
+	"dego/db"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -18,10 +18,10 @@ type Client interface {
 	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
-func NewClient(ctx context.Context, attempts int) (pool *pgxpool.Pool, err error) {
-	server := config.NewConfig()
+func New(ctx context.Context, attempts int) (pool *pgxpool.Pool, err error) {
+	server := config.NewDbConfig()
 	dsn := fmt.Sprintf("%s://%s:%s@%s:%s/%s", server.DB, server.DBUser, server.DBPwd, server.DBHost, server.DBPort, server.DBName)
-	err = utils.ConnectWithTries(func() error {
+	err = db.Connect(func() error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 

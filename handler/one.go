@@ -1,4 +1,4 @@
-package controller
+package handler
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"strconv"
 )
 
-func GetOne(c *gin.Context) {
-	client, err := postgresql.NewClient(context.TODO(), 3)
+func One(c *gin.Context) {
+	client, err := postgresql.New(context.TODO(), 3)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,11 +22,11 @@ func GetOne(c *gin.Context) {
 		log.Fatal("id input error")
 	}
 
-	person, err := repo.FindOne(context.TODO(), id)
+	p, err := repo.One(context.TODO(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"person not found with id": id})
 	}
-	if person.ID != 0 {
-		c.JSON(http.StatusOK, gin.H{"one person": person})
+	if p.ID != 0 {
+		c.JSON(http.StatusOK, gin.H{"one person": p})
 	}
 }

@@ -1,4 +1,4 @@
-package controller
+package handler
 
 import (
 	"context"
@@ -9,15 +9,15 @@ import (
 	"net/http"
 )
 
-func GetAll(c *gin.Context) {
-	client, err := postgresql.NewClient(context.TODO(), 3)
+func All(c *gin.Context) {
+	client, err := postgresql.New(context.TODO(), 3)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	repo := person.NewRepository(client)
 
-	id, err := repo.FindAll(context.TODO())
+	id, err := repo.All(context.TODO())
 	if err != nil {
 		return
 	}

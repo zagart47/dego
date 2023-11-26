@@ -6,33 +6,41 @@ import (
 	"os"
 )
 
-type ServerConfig struct {
+type server struct {
 	HTTPHost string
 	HTTPPort string
-	DBHost   string
-	DBPort   string
-	DBName   string
-	DB       string
-	DBUser   string
-	DBPwd    string
 }
 
-func NewConfig() ServerConfig {
+type db struct {
+	DBHost string
+	DBPort string
+	DBName string
+	DB     string
+	DBUser string
+	DBPwd  string
+}
+
+func NewDbConfig() *db {
+	return &db{
+		DBHost: os.Getenv("DBHOST"),
+		DBPort: os.Getenv("DBPORT"),
+		DBName: os.Getenv("DBNAME"),
+		DB:     os.Getenv("DB"),
+		DBUser: os.Getenv("DBUSER"),
+		DBPwd:  os.Getenv("DBPWD"),
+	}
+}
+
+func NewServerConfig() server {
 	err := godotenv.Load("config/.env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
-	serverConfig := ServerConfig{
+	s := server{
 		HTTPHost: os.Getenv("HTTPHOST"),
 		HTTPPort: os.Getenv("HTTPPORT"),
-		DBHost:   os.Getenv("DBHOST"),
-		DBPort:   os.Getenv("DBPORT"),
-		DBName:   os.Getenv("DBNAME"),
-		DB:       os.Getenv("DB"),
-		DBUser:   os.Getenv("DBUSER"),
-		DBPwd:    os.Getenv("DBPWD"),
 	}
-	return serverConfig
+	return s
 }
 
 func NewLinks() []string {

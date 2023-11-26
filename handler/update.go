@@ -1,4 +1,4 @@
-package controller
+package handler
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 )
 
 func Update(c *gin.Context) {
-	client, err := postgresql.NewClient(context.TODO(), 3)
+	client, err := postgresql.New(context.TODO(), 3)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,7 +23,7 @@ func Update(c *gin.Context) {
 		log.Fatal("id input error")
 	}
 	var p person.Person
-	p, err = repo.FindOne(context.TODO(), id)
+	p, err = repo.One(context.TODO(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"person not found with id": id})
 		return
